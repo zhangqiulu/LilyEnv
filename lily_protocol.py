@@ -35,14 +35,14 @@ class LilyProtocol(object):
     def unpack_response(**kwargs):
         assert 'response' in kwargs
         response = kwargs['response']
-        rtype, = struct.unpack('?', response[0])
-        length, = struct.unpack('i', response[1:5])
 
-        print(response,rtype,length)
-        if rtype:
-            data, = struct.unpack('{0}B'.format(length),response[5:5+length])
+        rtype, = struct.unpack('i', response[0:4])
+        length, = struct.unpack('i', response[4:8])
+
+        if rtype == 1:
+            data = struct.unpack('{0}B'.format(length),response[8:8+length])
         else:
-            data = response[5:5+length]
+            data = response[8:8+length]
 
         return rtype, length, data
 

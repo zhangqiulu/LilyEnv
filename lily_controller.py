@@ -14,7 +14,6 @@ class LilyController(object):
         if self.tcp_client:
             if self.tcp_client.send(request='obs'):
                 return self.tcp_client.receive(receive_size)
-                print("bbb")
         return False, 0, 0, 0
 
     def step(self):

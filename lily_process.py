@@ -14,13 +14,16 @@ class LilyProcess(object):
         self._controller = None
         self._start(**kwargs)
 
+    def __del__(self):
+        self.shutdown()
+
     def _start(self,**kwargs):
         try:
             #if self.launch(**kwargs):
             if self.connect(**kwargs):
                 self.set_controller()
         except Exception,e:
-            logging.error("[Lily Error][LilyProcess][__init__]".join(e))
+            logging.error("[Lily Error][LilyProcess][__init__]{0}".format(e))
             self.shutdown()
 
     @property
@@ -41,7 +44,8 @@ class LilyProcess(object):
     def connect(self,**kwargs):
         self._tcp_client = LilyTcpClient(**kwargs)
         self._tcp_client.connect()
-        return True
+        res, rtype, length, data = self._tcp_client.receive(256)
+        return res
 
     def set_controller(self):
         self._controller = LilyController(self._tcp_client)
