@@ -35,14 +35,25 @@ class LilyTcpClient(object):
     def receive(self, buffer_size):
         if self.socket:
             try:
-                received = self.socket.recv(buffer_size)
-                rtype, length, data = LilyProtocol.unpack_response(response=received)
-
-                return True, rtype, length, data
+                received = self._receive_all(buffer_size)
+                length, data = LilyProtocol.unpack_response(response=received)
+                return True, length, data
             except Exception,e:
                 logging.error("[Lily Error][LilyTcpClient][receive]{0}".format(e))
-                return False, 0, 0, 0
+                return False, 0, 0
 
     def shutdown(self):
         if self.socket:
             self.socket.close()
+
+    def _receive_all(self,buffer_size):
+
+        packet = self.socket.recv(buffer_size)
+        length, = struct.unpack('i', packet[0:4])
+        length += 4
+
+        while len(packet) < length:
+            data = self.socket.recv(length - len(packet))
+            if not data: break
+            packet += data
+        return packet

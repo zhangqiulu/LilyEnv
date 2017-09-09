@@ -19,9 +19,9 @@ class LilyProcess(object):
 
     def _start(self,**kwargs):
         try:
-            #if self.launch(**kwargs):
-            if self.connect(**kwargs):
-                self.set_controller()
+            if self.launch(**kwargs):
+                if self.connect(**kwargs):
+                    self.set_controller(**kwargs)
         except Exception,e:
             logging.error("[Lily Error][LilyProcess][__init__]{0}".format(e))
             self.shutdown()
@@ -32,8 +32,12 @@ class LilyProcess(object):
 
     def launch(self, **kwargs):
         assert 'args' in kwargs
+        assert 'config' in kwargs
+        config = kwargs['config']
         try:
-            self._proc = subprocess.Popen(kwargs['args'])
+
+            if config['proc']['launch']:
+                self._proc = subprocess.Popen(kwargs['args'])
             return True
         except OSError:
             self.close()
@@ -44,11 +48,11 @@ class LilyProcess(object):
     def connect(self,**kwargs):
         self._tcp_client = LilyTcpClient(**kwargs)
         self._tcp_client.connect()
-        res, rtype, length, data = self._tcp_client.receive(256)
+        res, length, data = self._tcp_client.receive(256)
         return res
 
-    def set_controller(self):
-        self._controller = LilyController(self._tcp_client)
+    def set_controller(self,**kwargs):
+        self._controller = LilyController(self._tcp_client,**kwargs)
         return True
 
     def close(self):

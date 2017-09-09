@@ -1,0 +1,8 @@
+tcp:
+  ip: 10.24.77.34
+  port: 8885
+proc:
+  launch: False
+data:
+  width: 400
+  height: 300

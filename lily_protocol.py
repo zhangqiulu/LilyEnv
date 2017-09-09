@@ -1,12 +1,20 @@
 import struct
 import json
+from lily_config import *
 
 
 class LilyProtocol(object):
 
+
+
+
     @staticmethod
-    def empty_request():
-        return {'request': '','param1':0,'param2':0.0,'param3':''}
+    def empty_request(request='', param=''):
+        return {'request': '','param': ''}
+
+    @staticmethod
+    def action_request(action='', value=0):
+        return {'action': '', 'value': 0}
 
     @staticmethod
     def get_param(**kwargs):
@@ -14,12 +22,8 @@ class LilyProtocol(object):
         request = LilyProtocol.empty_request()
         if 'request' in kwargs:
             request['request'] = kwargs['request']
-        if 'param1' in kwargs:
-            request['param1'] = kwargs['param1']
-        if 'param2' in kwargs:
-            request['param2'] = kwargs['param2']
-        if 'param3' in kwargs:
-            request['param3'] = kwargs['param3']
+        if 'param' in kwargs:
+            request['param'] = kwargs['param']
 
         return request
 
@@ -36,16 +40,36 @@ class LilyProtocol(object):
         assert 'response' in kwargs
         response = kwargs['response']
 
-        rtype, = struct.unpack('i', response[0:4])
-        length, = struct.unpack('i', response[4:8])
+        length, = struct.unpack('i', response[0:4])
 
-        if rtype == 1:
-            data = struct.unpack('{0}B'.format(length),response[8:8+length])
-        else:
-            data = response[8:8+length]
+        data = response[4:4 + length]
 
-        return rtype, length, data
+        data = LilyProtocol._unpack_response(data)
+
+        return length, data
+
+    @staticmethod
+    def _unpack_response(data_json):
+        data = json.loads(data_json);
+        type = data['type']
+        data = data['data']
+
+        unpacked = None
+
+        try:
+            unpacked = getattr(LilyProtocol, '_unpack_' + type + '_response')(data)
+        except AttributeError:
+            logging.error("[Lily Error][LilyProtocol][_unpack_response] No attr called {0}".format(type))
+
+        return unpacked
 
 
+    @staticmethod
+    def _unpack_msg_response(response):
+        data, = struct.unpack('{0}s'.format(len(response)), bytearray(response))
+        return data
 
-
+    @staticmethod
+    def _unpack_obs_response(response):
+        data = struct.unpack('{0}B'.format(len(response)), bytearray(response))
+        return data
