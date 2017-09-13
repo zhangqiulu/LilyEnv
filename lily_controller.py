@@ -1,7 +1,7 @@
 from lily_tcpcient import LilyTcpClient
 from lily_protocol import LilyProtocol
 import numpy as np
-
+import json
 
 class LilyController(object):
 
@@ -16,7 +16,7 @@ class LilyController(object):
         if self.tcp_client:
             if self.tcp_client.send(request='obs'):
                 res, length, data = self.tcp_client.receive(receive_size)
-                if res == 1:
+                if res == True:
                     width = self.config['data']['width']
                     height = self.config['data']['height']
 
@@ -24,12 +24,21 @@ class LilyController(object):
 
         return None
 
-    def act(self,action, value, receive_size=1024):
+    def act(self,action, receive_size=1024):
         if self.tcp_client:
-            action_request = LilyProtocol.action_request(action=action,value=value);
-            if self.tcp_client.send(request='action',param=action_request):
-                res, rtype, length, data = self.tcp_client.receive(receive_size)
+            action_request = LilyProtocol.action_request(action=action);
+            action_request_json = json.dumps(action_request)
+            if self.tcp_client.send(request='act',param=action_request_json):
+                res, length, data = self.tcp_client.receive(receive_size)
+                reward = data[0]
+                state = data[1]
+                if res == True:
+                    width = self.config['data']['width']
+                    height = self.config['data']['height']
 
+                    return reward, np.reshape(np.asarray(state), (height,width,3)).astype(np.uint8)
+
+        return None
 
 
 

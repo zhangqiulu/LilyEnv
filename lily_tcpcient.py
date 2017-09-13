@@ -26,6 +26,7 @@ class LilyTcpClient(object):
         if self.socket:
             try:
                 data_pack = LilyProtocol.pack_request(**kwargs)
+                print data_pack
                 self.socket.sendall(data_pack)
                 return True
             except Exception,e:

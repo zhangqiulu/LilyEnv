@@ -10,11 +10,11 @@ class LilyProtocol(object):
 
     @staticmethod
     def empty_request(request='', param=''):
-        return {'request': '','param': ''}
+        return {'request': request,'param': param}
 
     @staticmethod
-    def action_request(action='', value=0):
-        return {'action': '', 'value': 0}
+    def action_request(action=''):
+        return {'action': action}
 
     @staticmethod
     def get_param(**kwargs):
@@ -52,7 +52,6 @@ class LilyProtocol(object):
     def _unpack_response(data_json):
         data = json.loads(data_json);
         type = data['type']
-        data = data['data']
 
         unpacked = None
 
@@ -66,10 +65,19 @@ class LilyProtocol(object):
 
     @staticmethod
     def _unpack_msg_response(response):
+        response = response['data']
         data, = struct.unpack('{0}s'.format(len(response)), bytearray(response))
         return data
 
     @staticmethod
     def _unpack_obs_response(response):
+        response = response['data']
         data = struct.unpack('{0}B'.format(len(response)), bytearray(response))
         return data
+
+    @staticmethod
+    def _unpack_act_response(response):
+        reward = response['reward']
+        state = response['state']
+        state = struct.unpack('{0}B'.format(len(state)), bytearray(state))
+        return (reward,state)
